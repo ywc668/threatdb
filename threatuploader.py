@@ -15,7 +15,7 @@ from netaddr import *
 
 if len(sys.argv) != 4:
     print "Usage: python threatuploader.py (ipdb|domaindb) filetype filepath"
-    print "available filetypes: emergingthreats, binarydefense, alienvaultreputation, sslipblacklist, ransomwaretracker, blocklistdessh, blocklistdeapache, blocklistdebots, cinsscore"
+    print "available filetypes: emergingthreats, binarydefense, alienvaultreputation, sslipblacklist, ransomwaretracker, blocklistdessh, blocklistdeapache, blocklistdebots, cinsscore, sblam, stopforumspam"
     sys.exit(0)
 
 db_type = sys.argv[1]
@@ -353,6 +353,41 @@ def parse_sblam(file_path, red):
     red_pipe.execute()
     iplist_object.close()
     
+def parse_stopforumspam(file_path, red):
+    threatscore = 5
+    threattype = 'Web Form Spammer IP'
+    red_pipe = red.pipeline()
+    
+    iplist_object = open(file_path, "r")    
+    current_threatsource='StopForumSpam'
+    for row in iplist_object:
+        line_type=''
+        line = row[:-1]
+        if line == '' or line[0] == '#':
+            continue
+        try:    
+            IPAddress(line)
+            line_type='ip'
+        except AddrFormatError:
+            continue
+        except ValueError:
+            try:
+                IPNetwork(line)
+                line_type='net'
+            except AddrFormatError:
+                continue
+            except ValueError:
+                continue 
+
+        # Add the key to redis (ip|net:IPaddress|CIDR) => List [ThreatSource1:score1, ThreatSource2:score1] 
+        red_pipe.sadd(line_type+':'+line, "%s:%s:%s" % (current_threatsource, threattype, str(threatscore))).expire(line_type+':'+line,threat_ttl)
+        # Add to index 'net:index'=> Set [CIDR]
+        if line_type == 'net':
+            red_pipe.sadd('net:index',line)
+    
+    red_pipe.execute()
+    iplist_object.close()
+    
 def make_redisconn(conn_db):
     try:
         redis_pool = redis.ConnectionPool(host=redis_server, port=redis_port, db=conn_db)
@@ -386,6 +421,8 @@ def main():
             parse_cinsscore(threatfile_path, red)
         if threatfile_type == 'sblam':
             parse_sblam(threatfile_path, red)
+        if threatfile_type == 'stopforumspam':
+            parse_stopforumspam(threatfile_path, red)
             
         print 'status=done, threatsource='+threatfile_type
 
