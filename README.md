@@ -53,9 +53,9 @@ root is an example here. In production environment you can use any user account.
 
 - Create a lookup in Splunk UI - Lookup definitions - Search app:
 
-*Name:* lookupthreat
-*Command:* redisworker.py clientip threatscore
-*Fields:* clientip threatsource threatcategory threatscore
+Name: lookupthreat
+Command: redisworker.py clientip threatscore
+Fields: clientip threatsource threatcategory threatscore
 
 - Add permissions for lookup to share between Splunk apps
 
@@ -66,7 +66,7 @@ root is an example here. In production environment you can use any user account.
 ```
 search * | tail 5 |local| lookup local=true lookupthreat clientip
 ```
-local - needed for start scripts only on Splunk Head Search, but not on Indexers
+local - needed to start scripts only on Splunk Head Search, but not on Indexers
 
 - For parse script output you can use macros
 
