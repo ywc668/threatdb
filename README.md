@@ -53,9 +53,11 @@ root is an example here. In production environment you can use any user account.
 
 - Create a lookup in Splunk UI - Lookup definitions - Search app:
 
+```
 Name: lookupthreat
 Command: redisworker.py clientip threatscore
 Fields: clientip threatsource threatcategory threatscore
+```
 
 - Add permissions for lookup to share between Splunk apps
 
