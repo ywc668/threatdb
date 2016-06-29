@@ -41,6 +41,25 @@ def threatscore_calc(threttype):
         out=10
     return str(out) 
 
+# Upload parsed data to Redis
+# rpipe - redis-py pipeline object
+# ltype - 'ip'|'net'
+# lobj - ip address| CIDR
+# thsource - threat source
+# thtype - threat category
+# thscore - threat score
+# thttl - TTL of key in Redis
+def upload2redis(rpipe, ltype, lobj, thsource, thtype, thscore, thttl):
+    try:
+        # Add the key to redis (ip|net:IPaddress|CIDR) => List [ThreatSource1:score1, ThreatSource2:score1] 
+        rpipe.sadd(ltype+':'+lobj, "%s:%s:%s" % (thsource, thtype, str(thscore))).expire(ltype+':'+lobj,thttl)
+        # Add to index 'net:index'=> Set [CIDR]
+        if ltype == 'net':
+            rpipe.sadd('net:index',lobj)
+    except:
+        print 'status=error, message="Cant insert data to Redis"'
+        sys.exit(1)
+        
 def parse_emergingthreats(file_path, red):
     threatscore = 10
     threattype = 'Compromised IP'
@@ -85,11 +104,9 @@ def parse_emergingthreats(file_path, red):
                 continue
             except ValueError:
                 continue 
-        # Add the key to redis (ip|net:IPaddress|CIDR) => List [ThreatSource1:score1, ThreatSource2:score1] 
-        red_pipe.sadd(line_type+':'+line, "%s:%s:%s" % (current_threatsource, threattype, str(threatscore))).expire(line_type+':'+line,threat_ttl)
-        # Add to index 'net:index'=> Set [CIDR]
-        if line_type == 'net':
-            red_pipe.sadd('net:index',line)
+            
+        upload2redis(red_pipe, line_type, line, current_threatsource, threattype, threatscore, threat_ttl)
+
     red_pipe.execute()
     iplist_object.close()
     
@@ -119,11 +136,7 @@ def parse_binarydefense(file_path, red):
             except ValueError:
                 continue 
 
-        # Add the key to redis (ip|net:IPaddress|CIDR) => List [ThreatSource1:score1, ThreatSource2:score1] 
-        red_pipe.sadd(line_type+':'+line, "%s:%s:%s" % (current_threatsource, threattype, str(threatscore))).expire(line_type+':'+line,threat_ttl)
-        # Add to index 'net:index'=> Set [CIDR]
-        if line_type == 'net':
-            red_pipe.sadd('net:index',line)
+        upload2redis(red_pipe, line_type, line, current_threatsource, threattype, threatscore, threat_ttl)
     
     red_pipe.execute()
     iplist_object.close()
@@ -156,12 +169,8 @@ def parse_alienvaultreputation(file_path, red):
                 continue
             except ValueError:
                 continue 
-        # Add the key to redis (ip|net:IPaddress|CIDR) => List [ThreatSource1:score1, ThreatSource2:score1] 
-        red_pipe.sadd(line_type+':'+line, "%s:%s:%s" % (current_threatsource, threattype, str(threatscore))).expire(line_type+':'+line,threat_ttl)
-        # Add to index 'net:index'=> Set [CIDR]
         
-        if line_type == 'net':
-            red_pipe.sadd('net:index',line)
+        upload2redis(red_pipe, line_type, line, current_threatsource, threattype, threatscore, threat_ttl)
     
     red_pipe.execute()
     iplist_object.close()
@@ -196,12 +205,7 @@ def parse_sslipblacklist(file_path, red):
             except ValueError:
                 continue 
 
-        # Add the key to redis (ip|net:IPaddress|CIDR) => List [ThreatSource1:score1, ThreatSource2:score1] 
-        red_pipe.sadd(line_type+':'+line, "%s:%s:%s" % (current_threatsource, threattype, str(threatscore))).expire(line_type+':'+line,threat_ttl)
-        # Add to index 'net:index'=> Set [CIDR]
-        
-        if line_type == 'net':
-            red_pipe.sadd('net:index',line)
+        upload2redis(red_pipe, line_type, line, current_threatsource, threattype, threatscore, threat_ttl)
     
     red_pipe.execute()
     iplist_object.close()
@@ -232,11 +236,7 @@ def parse_ransomwaretracker(file_path, red):
             except ValueError:
                 continue 
 
-        # Add the key to redis (ip|net:IPaddress|CIDR) => List [ThreatSource1:score1, ThreatSource2:score1] 
-        red_pipe.sadd(line_type+':'+line, "%s:%s:%s" % (current_threatsource, threattype, str(threatscore))).expire(line_type+':'+line,threat_ttl)
-        # Add to index 'net:index'=> Set [CIDR]
-        if line_type == 'net':
-            red_pipe.sadd('net:index',line)
+        upload2redis(red_pipe, line_type, line, current_threatsource, threattype, threatscore, threat_ttl)
     
     red_pipe.execute()
     iplist_object.close()
@@ -265,11 +265,7 @@ def parse_blocklistde(file_path, red, threatscore, threattype):
             except ValueError:
                 continue 
 
-        # Add the key to redis (ip|net:IPaddress|CIDR) => List [ThreatSource1:score1, ThreatSource2:score1] 
-        red_pipe.sadd(line_type+':'+line, "%s:%s:%s" % (current_threatsource, threattype, str(threatscore))).expire(line_type+':'+line,threat_ttl)
-        # Add to index 'net:index'=> Set [CIDR]
-        if line_type == 'net':
-            red_pipe.sadd('net:index',line)
+        upload2redis(red_pipe, line_type, line, current_threatsource, threattype, threatscore, threat_ttl)
     
     red_pipe.execute()
     iplist_object.close()
@@ -309,11 +305,7 @@ def parse_cinsscore(file_path, red):
             except ValueError:
                 continue 
 
-        # Add the key to redis (ip|net:IPaddress|CIDR) => List [ThreatSource1:score1, ThreatSource2:score1] 
-        red_pipe.sadd(line_type+':'+line, "%s:%s:%s" % (current_threatsource, threattype, str(threatscore))).expire(line_type+':'+line,threat_ttl)
-        # Add to index 'net:index'=> Set [CIDR]
-        if line_type == 'net':
-            red_pipe.sadd('net:index',line)
+        upload2redis(red_pipe, line_type, line, current_threatsource, threattype, threatscore, threat_ttl)
     
     red_pipe.execute()
     iplist_object.close()
@@ -344,11 +336,7 @@ def parse_sblam(file_path, red):
             except ValueError:
                 continue 
 
-        # Add the key to redis (ip|net:IPaddress|CIDR) => List [ThreatSource1:score1, ThreatSource2:score1] 
-        red_pipe.sadd(line_type+':'+line, "%s:%s:%s" % (current_threatsource, threattype, str(threatscore))).expire(line_type+':'+line,threat_ttl)
-        # Add to index 'net:index'=> Set [CIDR]
-        if line_type == 'net':
-            red_pipe.sadd('net:index',line)
+        upload2redis(red_pipe, line_type, line, current_threatsource, threattype, threatscore, threat_ttl)
     
     red_pipe.execute()
     iplist_object.close()
@@ -379,11 +367,7 @@ def parse_stopforumspam(file_path, red):
             except ValueError:
                 continue 
 
-        # Add the key to redis (ip|net:IPaddress|CIDR) => List [ThreatSource1:score1, ThreatSource2:score1] 
-        red_pipe.sadd(line_type+':'+line, "%s:%s:%s" % (current_threatsource, threattype, str(threatscore))).expire(line_type+':'+line,threat_ttl)
-        # Add to index 'net:index'=> Set [CIDR]
-        if line_type == 'net':
-            red_pipe.sadd('net:index',line)
+        upload2redis(red_pipe, line_type, line, current_threatsource, threattype, threatscore, threat_ttl)
     
     red_pipe.execute()
     iplist_object.close()
@@ -427,11 +411,7 @@ def main():
         print 'status=done, threatsource='+threatfile_type
 
     if db_type == 'domaindb':
-	print 'status=error, message="domaindb is not implemented yet"'
+        print 'status=error, message="domaindb is not implemented yet"'
 
 main()
 sys.exit(0)
-
-
-    
-    
