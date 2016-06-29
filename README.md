@@ -9,22 +9,24 @@ RST IP Reputation Database for Splunk Enterprise
 
 ## Prerequisites
 
-1. Install Redis (http://redis.io/) on Splunk Search Head (or other server) to store IP reputation data
-2. To run redisworker.py install some libraries on Splunk Search Head:
+- Install Redis (http://redis.io/) on Splunk Search Head (or other server) to store IP reputation data
+- To run redisworker.py install some libraries on Splunk Search Head:
+
 ```
 $ wget https://bootstrap.pypa.io/get-pip.py
 $ python get-pip.py
 $ sudo pip install redis 
 $ sudo pip install netaddr
 ```
-3. All Python modules will be installed on your local python, but not in splunk pyhon instance
-4. Open redisworker.py and edit this lines, if needed
+- All Python modules will be installed on your local python, but not in splunk pyhon instance
+- Open redisworker.py and edit this lines, if needed
+
 ```
 sys.path.append("/usr/local/lib/python2.7/dist-packages")
 redis_server = '127.0.0.1'
 redis_port = 6379
 ```
-5. Database must be accessed from Splunk Searc Head 
+- Database must be accessed from Splunk Searc Head 
 
 ## Getting Started
 
@@ -50,9 +52,9 @@ $ mkdir -p /tmp/threatsupload
 root is an example here. In production environment you can use any user account.
 
 - Create a lookup in Splunk UI - Lookup definitions - Search app:
-* Name lookupthreat
-* Command: redisworker.py clientip threatscore
-* Fields: clientip threatsource threatcategory threatscore
++ Name lookupthreat
++ Command: redisworker.py clientip threatscore
++ Fields: clientip threatsource threatcategory threatscore
 
 - Add permissions for lookup to share between Splunk apps
 
