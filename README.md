@@ -28,7 +28,7 @@ redis_port = 6379
 
 ## Getting Started
 
-1. Copy redisworker.py, threat_flushdb.py, threatuploader.py, start_threatupload.sh to the following directories:
+- Copy redisworker.py, threat_flushdb.py, threatuploader.py, start_threatupload.sh to the following directories:
 
 ```
 $ cp redisworker.py $SPLUNK_HOME/etc/apps/search/bin/redisworker.py
@@ -36,36 +36,36 @@ $ mkdir $SPLUNK_HOME/bin/scripts/threatDB/
 $ cp threat* $SPLUNK_HOME/bin/scripts/threatDB/
 ```
 
-2. Create directory to store feeds:
+- Create directory to store feeds:
 
 ```
 $ mkdir -p /tmp/threatsupload
 ```
 
-3. Modify /etc/crontab to create an update job:
+- Modify /etc/crontab to create an update job:
 
 ```
 2 0 * * * root /opt/splunk/bin/scripts/threatsDB/start_threatupload.sh /tmp/threatsupload
 ```
 root is an example here. In production environment you can use any user account.
 
-4. Create a lookup in Splunk UI - Lookup definitions - Search app:
+- Create a lookup in Splunk UI - Lookup definitions - Search app:
 * Name lookupthreat
 * Command: redisworker.py clientip threatscore
 * Fields: clientip threatsource threatcategory threatscore
 
-5. Add permissions for lookup to share between Splunk apps
+- Add permissions for lookup to share between Splunk apps
 
 ## Usage
 
-1. To start on Search app:
+- To start on Search app:
  
 ```
 search * | tail 5 |local| lookup local=true lookupthreat clientip
 ```
 local - needed for start scripts only on Splunk Head Search, but not on Indexers
 
-2. For parse script output you can use macros
+- For parse script output you can use macros
 
 ```
 Name: threatDB(1)
@@ -74,6 +74,7 @@ Arguments: arg1
 ```
 
 Like this:
+
 ```
 search * | tail 5 |local| `threatDB(clientip)`
 ```
