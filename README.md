@@ -44,7 +44,7 @@ $ cp threat* $SPLUNK_HOME/bin/scripts/threatDB/
 $ mkdir -p /tmp/threatsupload
 ```
 
-- Modify /etc/crontab to create an update job:
+- Modify /etc/crontab to create an update job (update once peer day, in database TTL of entry = 48 hours):
 
 ```
 2 0 * * * root /opt/splunk/bin/scripts/threatsDB/start_threatupload.sh /tmp/threatsupload
