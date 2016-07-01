@@ -26,7 +26,7 @@ sys.path.append("/usr/local/lib/python2.7/dist-packages")
 redis_server = '127.0.0.1'
 redis_port = 6379
 ```
-- Database must be accessed from Splunk Searc Head 
+- Database must be accessed from Splunk Search Head 
 
 ## Getting Started
 
@@ -38,7 +38,7 @@ $ mkdir $SPLUNK_HOME/bin/scripts/threatDB/
 $ cp threat* $SPLUNK_HOME/bin/scripts/threatDB/
 ```
 
-- Create directory to store feeds:
+- Create the directory to store feeds:
 
 ```
 $ mkdir -p /tmp/threatsupload
@@ -70,7 +70,7 @@ search * | tail 5 |local| lookup local=true lookupthreat clientip
 ```
 local - needed to start scripts only on Splunk Head Search, but not on Indexers
 
-- For parse script output you can use macros
+- To parse script output you can use the macros
 
 ```
 Name: threatDB(1)
