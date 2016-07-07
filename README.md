@@ -18,7 +18,7 @@ $ python get-pip.py
 $ sudo pip install redis 
 $ sudo pip install netaddr
 ```
-- All Python modules will be installed on your local python, but not in splunk pyhon instance
+- All Python modules will be installed on your local Python instance, but not in Splunk Python instance
 - Open and edit this lines, if needed
 
 redisworker.py 
@@ -38,6 +38,11 @@ threatuploader.py
 ```
 redis_server = '127.0.0.1'
 redis_port = 6379
+```
+
+start_threatupload.sh
+```
+base_dir=/opt/splunk/bin/scripts/threatsDB
 ```
 
 - Database must be accessed from Splunk Search Head 
