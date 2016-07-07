@@ -376,8 +376,9 @@ def make_redisconn(conn_db):
     try:
         redis_pool = redis.ConnectionPool(host=redis_server, port=redis_port, db=conn_db)
         redis_conn = redis.Redis(connection_pool=redis_pool)
+	redis_conn.ping()
     except:
-        print 'status=error, message="Redis connection error '+redis_server+':'+redis_port+'"'
+        print 'status=error, message="Redis connection error '+redis_server+':'+str(redis_port)+'"'
         sys.exit(0)
     return redis_conn
 

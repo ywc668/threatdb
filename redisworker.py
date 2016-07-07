@@ -86,7 +86,7 @@ def main():
         redis_conn.ping()
     except:
         logger.error('module="ThreatDB", message="No ThreatDB connection"')
-        return ('','','','')
+        return (clientip,'','','')
 
     r = csv.reader(sys.stdin)
     w = csv.writer(sys.stdout)
