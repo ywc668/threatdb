@@ -1,16 +1,31 @@
-# threatdb
-
-RST IP Reputation Database for Splunk Enterprise
+# RST Cloud Threat Database Add-on for Splunk
 
 ## Goals
 
-- fetch and merge threat intelligence data from different sources
-- fast access IP Reputation data from Splunk
+RST Cloud Threat Database Add-on allows to aggregate threat intelligence from multiple sources, store it locally in the Redis Database and quickly check a bunch of IP addresses against it. It makes possible to determine malicious IP addresses in the logs and use this information to analyse such activities.
+
+The Threat Intelligence data will help you to:
+
+* identify malicious activity in your infrastructure
+* prioritise alerts based on IP reputation score
+* classify attackers as blacklisted IPs, spam senders, web form spammers and so on
+* determine fake search bots
+
+Splunk add-on features:
+
+* Automatically download IP reputation data and save in the Redis Database;
+* Predefined macros helps to enrich your log containing IP addresses;
+* A near real-time performance with an ability to process thousands of IPs at one time.
+
+More information on: 
+
+* https://rstcloud.net
+* https://splunkbase.splunk.com/app/3236
 
 ## Prerequisites
 
-- Install Redis (http://redis.io/) on Splunk Search Head (or other server) to store IP reputation data
-- To run redisworker.py install some libraries on Splunk Search Head:
+* Install Redis (http://redis.io/) on Splunk Search Head (or other server) to store IP reputation data
+* To run lookup command install some libraries on Splunk Search Head:
 
 ```
 $ wget https://bootstrap.pypa.io/get-pip.py
@@ -18,8 +33,9 @@ $ python get-pip.py
 $ sudo pip install redis 
 $ sudo pip install netaddr
 ```
-- All Python modules will be installed on your local Python instance, but not in Splunk Python instance
-- Open and edit this lines, if needed
+
+* All Python modules will be installed on your local Python instance, but not in Splunk Python instance
+* Open $SPLUNK_HOME/etc/apps/threatDB/bin and edit this lines, if needed:
 
 redisworker.py 
 ```
@@ -42,66 +58,41 @@ redis_port = 6379
 
 start_threatupload.sh
 ```
-base_dir=/opt/splunk/bin/scripts/threatsDB
+base_dir=/opt/splunk/bin/scripts/threatDB
 ```
 
-- Database must be accessed from Splunk Search Head 
+* Database must be accessed from Splunk Search Head 
 
 ## Getting Started
 
-- Copy redisworker.py, threat_flushdb.py, threatuploader.py, start_threatupload.sh to the following directories:
-
-```
-$ cp redisworker.py $SPLUNK_HOME/etc/apps/search/bin/redisworker.py
-$ mkdir $SPLUNK_HOME/bin/scripts/threatDB/
-$ cp threat* $SPLUNK_HOME/bin/scripts/threatDB/
-```
-
-- Create the directory to store feeds:
+* Create the directory to store feeds:
 
 ```
 $ mkdir -p /tmp/threatsupload
 ```
 
-- Modify /etc/crontab to create an update job (update once peer day, in database TTL of entry = 48 hours):
+* Modify /etc/crontab to create an update job (update once peer day, in database entry TTL = 48 hours):
 
 ```
-2 0 * * * root /opt/splunk/bin/scripts/threatsDB/start_threatupload.sh /tmp/threatsupload
+2 0 * * * root $SPLUNK_HOME/etc/apps/threatDB/bin/start_threatupload.sh /tmp/threatsupload
 ```
 root is an example here. In production environment you can use any user account.
 
-- Create a lookup in Splunk UI - Lookup definitions - Search app:
-
-```
-Name: lookupthreat
-Command: redisworker.py clientip threatscore
-Fields: clientip threatsource threatcategory threatscore
-```
-
-- Add permissions for lookup to share between Splunk apps
 
 ## Usage
 
-- To start on Search app:
+* To start on Search app:
  
 ```
-search * | tail 5 |local| lookup local=true lookupthreat clientip
+| lookup local=true lookupthreat clientip
 ```
 local - needed to start scripts only on Splunk Head Search, but not on Indexers
 
-- To parse script output you can use the macros
+* To parse script output you can use the macros:
 
 ```
-Name: threatDB(1)
-Definition: lookup local=true lookupthreat $arg1$|eval threatcategory=split(threatcategory, ","), threatsource=split(threatsource, ","),threatscore=split(threatscore, ",")| eventstats sum(threatscore) as sumthreatscore by $arg1$|eval threatscore=sumthreatscore |fields - sumthreatscore
-Arguments: arg1
-```
-
-Like this:
-
-```
-search * | tail 5 |local| `threatDB(clientip)`
+| `threatDB(clientip)`
 ```
 
 ## License
-threatdb is released under the [MIT License](MIT-LICENSE) by RST Cloud (https://www.rstcloud.net)
+RST Cloud Threat Database is released under the [MIT License](MIT-LICENSE) by RST Cloud (https://www.rstcloud.net)
