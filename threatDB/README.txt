@@ -40,6 +40,7 @@ redis_port = 6379
 start_threatupload.sh
 ```
 base_dir=/opt/splunk/bin/scripts/threatDB
+python_bindir=/usr/bin
 ```
 
 5. Database must be accessed from Splunk Search Head 

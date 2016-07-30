@@ -4,100 +4,83 @@ if [ -z "$1" ]; then
 fi
 
 threats_dir=$1
-base_dir=/opt/splunk/bin/scripts/threatsDB
-source_1='emergingthreats'
-source_2='binarydefense'
-source_3='alienvaultreputation'
-source_4='sslipblacklist'
-source_5='ransomwaretracker'
-source_6='blocklistdessh'
-source_7='blocklistdeapache'
-source_8='blocklistdebots'
-source_9='cinsscore'
-source_10='stopforumspam'
-source_11='sblam'
+base_dir=/opt/splunk/bin/scripts/threatDB
+python_bindir=/usr/bin
+
+feeds_list=(
+'emergingthreats=http://rules.emergingthreats.net/fwrules/emerging-Block-IPs.txt'
+'binarydefense=http://www.binarydefense.com/banlist.txt' 
+'alienvaultreputation=https://reputation.alienvault.com/reputation.snort.gz' 
+'sslipblacklist=https://sslbl.abuse.ch/blacklist/sslipblacklist.csv' 
+'ransomwaretracker=https://ransomwaretracker.abuse.ch/downloads/RW_IPBL.txt' 
+'blocklistdessh=https://lists.blocklist.de/lists/ssh.txt' 
+'blocklistdeapache=https://lists.blocklist.de/lists/apache.txt' 
+'blocklistdebots=https://lists.blocklist.de/lists/bots.txt' 
+'cinsscore=http://cinsscore.com/list/ci-badguys.txt' 
+'stopforumspam=http://www.stopforumspam.com/downloads/bannedips.zip' 
+'sblam=http://sblam.com/blacklist.txt' 
+'atlasattacks=https://atlas.arbor.net/summary/attacks.csv' 
+'atlasfastflux=https://atlas.arbor.net/summary/fastflux.csv' 
+'atlasphishing=https://atlas.arbor.net/summary/phishing.csv' 
+'atlasscans=https://atlas.arbor.net/summary/scans.csv' 
+'myip=https://myip.ms/files/blacklist/general/latest_blacklist.txt' 
+'botvrij=http://www.botvrij.eu/data/ioclist.ip-dst.raw' 
+'darklist=http://www.darklist.de/raw.php' 
+'labssnort=http://labs.snort.org/feeds/ip-filter.blf' 
+'openbl=http://www.openbl.org/lists/base_1days.txt'
+)
+
+echo
+echo 'Make temp feeds dir and clean if exist'
 
 mkdir -p $threats_dir
 rm -rf $threats_dir/*.feed
 
-echo 'Start download'
-echo
-
-wget http://rules.emergingthreats.net/fwrules/emerging-Block-IPs.txt -O $threats_dir/$source_1.feed --no-check-certificate -N
-
-wget http://www.binarydefense.com/banlist.txt -O $threats_dir/$source_2.feed --no-check-certificate -N
-
-wget https://reputation.alienvault.com/reputation.snort.gz -P $threats_dir --no-check-certificate -N
-gzip -d $threats_dir/reputation.snort.gz
-mv $threats_dir/reputation.snort $threats_dir/$source_3.feed
-
-wget https://sslbl.abuse.ch/blacklist/sslipblacklist.csv -O $threats_dir/$source_4.feed --no-check-certificate -N
-
-wget https://ransomwaretracker.abuse.ch/downloads/RW_IPBL.txt -O $threats_dir/$source_5.feed --no-check-certificate -N
-
-wget https://lists.blocklist.de/lists/ssh.txt -O $threats_dir/$source_6.feed --no-check-certificate -N
-
-wget https://lists.blocklist.de/lists/apache.txt -O $threats_dir/$source_7.feed --no-check-certificate -N
-
-wget https://lists.blocklist.de/lists/bots.txt -O $threats_dir/$source_8.feed --no-check-certificate -N
- 
-wget http://cinsscore.com/list/ci-badguys.txt -O $threats_dir/$source_9.feed --no-check-certificate -N
-
-wget http://www.stopforumspam.com/downloads/bannedips.zip -P $threats_dir --no-check-certificate -N
-unzip -d $threats_dir $threats_dir/bannedips.zip 
-tr ',' '\n' < $threats_dir/bannedips.csv > $threats_dir/$source_10.feed
-rm -rf $threats_dir/bannedips.zip
-rm -rf $threats_dir/bannedips.csv
-
-wget http://sblam.com/blacklist.txt -O $threats_dir/$source_11.feed --no-check-certificate -N
-
-echo 'Flush IP DB'
-/usr/bin/python $base_dir/threat_flushdb.py netsdb flush
-
-echo 'Start parsing and uploading'
+echo 'Flush NETs DB'
+$python_bindir/python $base_dir/threat_flushdb.py netsdb flush
 
 echo
-echo $source_1
-/usr/bin/python $base_dir/threatuploader.py ipdb $source_1 $threats_dir/$source_1.feed
+echo 'Start download feeds'
 
-echo
-echo $source_2
-/usr/bin/python $base_dir/threatuploader.py ipdb $source_2 $threats_dir/$source_2.feed
+for i in ${feeds_list[@]}; do
+  feed_code=''
+  feed_url=''
+  unset tmpfeed
 
-echo
-echo $source_3
-/usr/bin/python $base_dir/threatuploader.py ipdb $source_3 $threats_dir/$source_3.feed
+  # Parse feeds array
+  tmpfeed=(${i//=/ })
+  feed_code=${tmpfeed[0]}
+  feed_url=${tmpfeed[1]}
 
-echo
-echo $source_4
-/usr/bin/python $base_dir/threatuploader.py ipdb $source_4 $threats_dir/$source_4.feed
+  if [[ $feed_code == "alienvaultreputation" ]]
+    then
+      wget "$feed_url" -P $threats_dir --no-check-certificate -N
+      gzip -d $threats_dir/reputation.snort.gz
+      mv $threats_dir/reputation.snort $threats_dir/$feed_code.feed
 
-echo
-echo $source_5
-/usr/bin/python $base_dir/threatuploader.py ipdb $source_5 $threats_dir/$source_5.feed
+  elif [[ $feed_code == "stopforumspam" ]]
+    then
+      wget "$feed_url" -P $threats_dir --no-check-certificate -N
+      unzip -d $threats_dir $threats_dir/bannedips.zip 
+      tr ',' '\n' < $threats_dir/bannedips.csv > $threats_dir/$feed_code.feed
+      rm -rf $threats_dir/bannedips.zip
+      rm -rf $threats_dir/bannedips.csv
+  else	        
+    wget "$feed_url" -O $threats_dir/$feed_code.feed --no-check-certificate -N
+  fi
 
-echo
-echo $source_6
-/usr/bin/python $base_dir/threatuploader.py ipdb $source_6 $threats_dir/$source_6.feed
+  # Countinue if not downloaded
+  if [ -s $threats_dir/$feed_code.feed ]
+    then
+      echo "status=done, threatsource=$feed_code, message=Downloaded" 
+  else 
+    echo "status=error, threatsource=$feed_code, message=Notfound"
+    continue
+  fi
+  
+  # Upload to DB
+  $python_bindir/python $base_dir/threatuploader.py ipdb $feed_code $threats_dir/$feed_code.feed
 
-echo
-echo $source_7
-/usr/bin/python $base_dir/threatuploader.py ipdb $source_7 $threats_dir/$source_7.feed
-
-echo
-echo $source_8
-/usr/bin/python $base_dir/threatuploader.py ipdb $source_8 $threats_dir/$source_8.feed
-
-echo
-echo $source_9
-/usr/bin/python $base_dir/threatuploader.py ipdb $source_9 $threats_dir/$source_9.feed
-
-echo
-echo $source_10
-/usr/bin/python $base_dir/threatuploader.py ipdb $source_10 $threats_dir/$source_10.feed
-
-echo
-echo $source_11
-/usr/bin/python $base_dir/threatuploader.py ipdb $source_11 $threats_dir/$source_11.feed
+done
 
 exit
