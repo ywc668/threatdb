@@ -28,6 +28,6 @@
 [Arbor Attacks]: https://atlas.arbor.net
 [MYIP.ms]: http://www.myip.ms
 [Botvrij]: http://www.botvrij.eu
-[Darklist]: http://www.darklist.de
+[Darklist.de]: http://www.darklist.de
 [Labs.Snort]: https://labs.snort.org
 [OpenBL]: http://www.openbl.org
