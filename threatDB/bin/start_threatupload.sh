@@ -1,3 +1,5 @@
+#!/bin/sh
+
 if [ -z "$1" ]; then
         echo 'Usage: start_threatupload.sh <threatdir>'
         exit
@@ -42,7 +44,8 @@ $python_bindir/python $base_dir/threat_flushdb.py netsdb flush
 echo
 echo 'Start download feeds'
 
-for i in ${feeds_list[@]}; do
+for i in ${feeds_list[@]} 
+do
   feed_code=''
   feed_url=''
   unset tmpfeed
