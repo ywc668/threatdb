@@ -1,8 +1,8 @@
 #!/bin/sh
 
 if [ -z "$1" ]; then
-        echo 'Usage: start_threatupload.sh <threatdir>'
-        exit
+  echo 'Usage: start_threatupload.sh <threatdir>'
+  exit
 fi
 
 threats_dir=$1
@@ -44,6 +44,7 @@ $python_bindir/python $base_dir/threat_flushdb.py netsdb flush
 echo
 echo 'Start download feeds'
 
+set -o braceexpand
 for i in ${feeds_list[@]} 
 do
   feed_code=''
@@ -68,6 +69,7 @@ do
       tr ',' '\n' < $threats_dir/bannedips.csv > $threats_dir/$feed_code.feed
       rm -rf $threats_dir/bannedips.zip
       rm -rf $threats_dir/bannedips.csv
+  
   else	        
     wget "$feed_url" -O $threats_dir/$feed_code.feed --no-check-certificate -N
   fi
