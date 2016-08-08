@@ -1,5 +1,4 @@
-#!/bin/sh
-
+#!/bin/bash
 if [ -z "$1" ]; then
   echo 'Usage: start_threatupload.sh <threatdir>'
   exit
@@ -89,3 +88,4 @@ do
 done
 
 exit
+
