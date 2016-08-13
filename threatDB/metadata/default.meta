@@ -4,8 +4,6 @@
 []
 access = read : [ * ], write : [ admin, power ]
 export = system
-version = 6.4.1
-modtime = 1469840297.179757000
 
 ### EVENT TYPES
 
@@ -34,11 +32,14 @@ export = system
 access = read : [ * ], write : [ admin, power ]
 export = system
 owner = admin
-version = 6.4.1
-modtime = 1467577235.029838000
 
 ### VIEWSTATES: even normal users should be able to create shared viewstates
 
 [viewstates]
 access = read : [ * ], write : [ * ]
 export = system
+
+[macros/threatDB%281%29]
+access = read : [ * ], write : [ admin, power ]
+export = system
+owner = admin
