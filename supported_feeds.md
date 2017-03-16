@@ -15,6 +15,9 @@
 * [Darklist.de]
 * [Labs.Snort]
 * [OpenBL]
+* [Danger.Rulez]
+* [BambenekConsulting]
+* [Tor Project]
 
 [EmergingThreats]: http://rules.emergingthreats.net
 [Binary Defence]: http://www.binarydefense.com
@@ -31,3 +34,6 @@
 [Darklist.de]: http://www.darklist.de
 [Labs.Snort]: https://labs.snort.org
 [OpenBL]: http://www.openbl.org
+[Danger.Rulez]: http://danger.rulez.sk
+[BambenekConsulting]: http://bambenekconsulting.com
+[Tor Project]: https://torproject.org
