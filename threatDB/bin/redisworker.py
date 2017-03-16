@@ -1,6 +1,6 @@
 #####
 ##### RST Threat Database add-on for Splunk Enterprise
-##### Copyright (c) 2016 RST Cloud
+##### Copyright (c) 2017 RST Cloud
 ##### https://www.rstcloud.net/
 ##### 
 ##### Author: Nikolay Arefiev
@@ -49,7 +49,7 @@ def ip_threat(clientip, red):
         try:
             ip = IPAddress(clientip)
         except:
-            return (clientip, '','','','')
+            return (clientip, "none", "none", "0")
         threat_nets=[]
         # Find all networks which have equal first octet
         for i in red.sscan_iter(name='net:index',match=str(ip.words[0])+'*',count=500): #search by fetching 500 values per block

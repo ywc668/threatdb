@@ -2,7 +2,7 @@
 
 #####
 ##### RST Threat Database add-on for Splunk Enterprise
-##### Copyright (c) 2016 RST Cloud
+##### Copyright (c) 2017 RST Cloud
 ##### https://www.rstcloud.net/
 ##### 
 ##### Author: Nikolay Arefiev

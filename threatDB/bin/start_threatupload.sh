@@ -29,6 +29,9 @@ feeds_list=(
 'darklist=http://www.darklist.de/raw.php' 
 'labssnort=http://labs.snort.org/feeds/ip-filter.blf' 
 'openbl=http://www.openbl.org/lists/base_1days.txt'
+'dangerrulez=http://danger.rulez.sk/projects/bruteforceblocker/blist.php'
+'bambenekconsulting=http://osint.bambenekconsulting.com/feeds/c2-ipmasterlist.txt'
+'torproject=https://check.torproject.org/exit-addresses'
 )
 
 echo

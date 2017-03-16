@@ -2,7 +2,7 @@
 
 #####
 ##### RST Threat Database add-on for Splunk Enterprise
-##### Copyright (c) 2016 RST Cloud
+##### Copyright (c) 2017 RST Cloud
 ##### https://www.rstcloud.net/
 ##### 
 ##### Author: Nikolay Arefiev
@@ -20,12 +20,26 @@ avail_threattypes = [
                "blocklistdessh", "blocklistdeapache", "blocklistdebots", 
                "cinsscore", "sblam", "stopforumspam", 
                "atlasattacks", "atlasfastflux", "atlasphishing", "atlasscans",
-               "myip","botvrij", "darklist", "labssnort", "openbl"
+               "myip","botvrij", "darklist", "labssnort", "openbl","dangerrulez",
+               "bambenekconsulting", "torproject"
                ]
-
+threatscore_dict={'Malicious Host':20, 
+    'Scanning Host':5, 
+    'Spamming Host':10,
+    'Compromised IP':10,
+    'Bad SSL':5,
+    'SSH attacks':20,
+    'Apache attacks':20,
+    'Bad bots':10,
+    'Web Form Spammer':5,
+    'Fast flux hosting':10,
+    'Phishing Host':10,
+    'Web attacks':10,
+    'C2 servers':50,
+    'TOR exit nodes':10}
+    
 if len(sys.argv) != 4:
     print "Usage: python threatuploader.py (ipdb|domaindb) filetype filepath"
-    print "available filetypes: "
     sys.exit(1)
 
 db_type = sys.argv[1]
@@ -44,15 +58,16 @@ redis_domaindb=1
 # TTL of entry in the database
 threat_ttl=172800 # 48 hours
 
-def threatscore_calc(threttype):
+
+def threatscore_alias(threttype):
     out=0
     # AlienVailt DB threat types
     if threttype == 'Malicious Host':
-        out=20
+        out=threatscore_dict[threttype]
     if threttype == 'Scanning Host':
-        out=5
+        out=threatscore_dict[threttype]
     if threttype == 'Spamming Host':
-        out=10
+        out=threatscore_dict[threttype]
     return str(out) 
 
 # Upload parsed data to Redis
@@ -103,8 +118,8 @@ def simpleparser(file_path, red, threatscore, threattype, current_threatsource):
     iplist_object.close()
         
 def parse_emergingthreats(file_path, red):
-    threatscore = 10
     threattype = 'Compromised IP'
+    threatscore = threatscore_dict[threattype]
     
     red_pipe = red.pipeline()
     iplist_object = open(file_path, "r")
@@ -153,10 +168,11 @@ def parse_emergingthreats(file_path, red):
     iplist_object.close()
     
 def parse_binarydefense(fp, rd):
-    simpleparser(fp, rd, 10, 'Compromised IP', 'Binarydefense.com')   
+    threattype = 'Compromised IP'
+    simpleparser(fp, rd, threatscore_dict[threattype], threattype, 'Binarydefense.com')   
     
 def parse_alienvaultreputation(file_path, red):
-    threattype = ''
+    threattype = '' #Def in feed
     
     red_pipe = red.pipeline()
     iplist_object = open(file_path, "r")    
@@ -169,7 +185,7 @@ def parse_alienvaultreputation(file_path, red):
         linetemp = line.split('#', 1)
         line = linetemp[0].strip()
         threattype = linetemp[1].split(';',1)[0].strip()
-        threatscore = threatscore_calc(threattype)
+        threatscore = threatscore_alias(threattype)
         try:    
             IPAddress(line)
             line_type='ip'
@@ -190,8 +206,8 @@ def parse_alienvaultreputation(file_path, red):
     iplist_object.close()
     
 def parse_sslipblacklist(file_path, red):
-    threatscore = 5
-    threattype = ''
+    threattype = 'Bad SSL'
+    threatscore = threatscore_dict[threattype]
     
     red_pipe = red.pipeline()     
     iplist_object = open(file_path, "r")    
@@ -225,25 +241,32 @@ def parse_sslipblacklist(file_path, red):
     iplist_object.close()
 
 def parse_ransomwaretracker(fp, rd):
-    simpleparser(fp, rd, 10, 'Compromised IP', 'Ransomwaretracker.abuse.ch')   
+    threattype = 'Compromised IP'
+    simpleparser(fp, rd, threatscore_dict[threattype], threattype, 'Ransomwaretracker.abuse.ch')   
     
 def parse_blocklistdessh(fp, rd):
-    simpleparser(fp, rd, 20, 'SSH attacks','Blocklist.de')
+    threattype = 'SSH attacks'
+    simpleparser(fp, rd, threatscore_dict[threattype], threattype,'Blocklist.de')
     
 def parse_blocklistdeapache(fp, rd):
-    simpleparser(fp, rd, 10, 'Apache attacks','Blocklist.de')
+    threattype = 'Web attacks'
+    simpleparser(fp, rd, threatscore_dict[threattype], threattype,'Blocklist.de')
 
 def parse_blocklistdebots(fp, rd):
-    simpleparser(fp, rd, 10, 'Bad bots','Blocklist.de')
+    threattype = 'Bad bots'
+    simpleparser(fp, rd, threatscore_dict[threattype], threattype,'Blocklist.de')
 
 def parse_cinsscore(fp, rd):
-    simpleparser(fp, rd, 10, 'Compromised IP','CINSScore.com')
+    threattype = 'Compromised IP'
+    simpleparser(fp, rd, threatscore_dict[threattype], threattype,'CINSScore.com')
     
 def parse_sblam(fp, rd):
-    simpleparser(fp, rd, 5, 'Web Form Spammer IP','Sblam.com')
+    threattype = 'Web Form Spammer'
+    simpleparser(fp, rd, threatscore_dict[threattype], threattype,'Sblam.com')
     
 def parse_stopforumspam(fp, rd):
-    simpleparser(fp, rd, 5, 'Web Form Spammer IP','Stopforumspam.com')
+    threattype = 'Web Form Spammer'
+    simpleparser(fp, rd, threatscore_dict[threattype], threattype,'Stopforumspam.com')
    
 def parse_arboratlas(file_path, red, threatscore, threattype):
     red_pipe = red.pipeline()
@@ -277,17 +300,21 @@ def parse_arboratlas(file_path, red, threatscore, threattype):
     iplist_object.close()
     
 def parse_atlasattacks(fp, rd):
-    parse_arboratlas(fp, rd, 20, 'Malicious Host')
+    threattype = 'Malicious Host'
+    parse_arboratlas(fp, rd, threatscore_dict[threattype], threattype)
 def parse_atlasfastflux(fp, rd):
-    parse_arboratlas(fp, rd, 10, 'Fast flux hosting')
+    threattype = 'Fast flux hosting'
+    parse_arboratlas(fp, rd, threatscore_dict[threattype], threattype)
 def parse_atlasphishing(fp, rd):
-    parse_arboratlas(fp, rd, 10, 'Phishing Host')
+    threattype = 'Phishing Host'
+    parse_arboratlas(fp, rd, threatscore_dict[threattype], threattype)
 def parse_atlasscans(fp, rd):
-    parse_arboratlas(fp, rd, 10, 'Scanning Host')
+    threattype = 'Scanning Host'
+    parse_arboratlas(fp, rd, threatscore_dict[threattype], threattype)
 
 def parse_myip(file_path, red):
-    threatscore = 10
     threattype = 'Bad bots'
+    threatscore = threatscore_dict[threattype]
     red_pipe = red.pipeline()
     
     iplist_object = open(file_path, "r")    
@@ -319,17 +346,117 @@ def parse_myip(file_path, red):
     iplist_object.close()
  
 def parse_botvrij(fp, rd):
-    simpleparser(fp, rd, 20, 'Malicious Host', 'Botvrij.eu')
+    threattype = 'Malicious Host'
+    simpleparser(fp, rd, threatscore_dict[threattype], threattype, 'Botvrij.eu')
     
 def parse_darklist(fp, rd):
-    simpleparser(fp, rd, 20, 'SSH attacks', 'Darklist.de')
+    threattype = 'SSH attacks'
+    simpleparser(fp, rd, threatscore_dict[threattype], threattype, 'Darklist.de')
     
 def parse_labssnort(fp, rd):
-    simpleparser(fp, rd, 20, 'Malicious Host', 'Labs.snort.org')
+    threattype = 'Malicious Host'
+    simpleparser(fp, rd, threatscore_dict[threattype], threattype, 'Labs.snort.org')
  
 def parse_openbl(fp, rd):
-    simpleparser(fp, rd, 10, 'Web attacks', 'OpenBL.org')
-        
+    threattype = 'Web attacks'
+    simpleparser(fp, rd, threatscore_dict[threattype], threattype, 'OpenBL.org')
+
+def parse_dangerrulez(file_path, red):
+    threattype = 'SSH attacks'
+    threatscore = threatscore_dict[threattype]
+    red_pipe = red.pipeline()
+    
+    iplist_object = open(file_path, "r")    
+    current_threatsource='Danger.rulez.sk'
+    for row in iplist_object:
+        line_type=''
+        line = row[:-1]
+        if line == '' or line[0] == "#":
+            continue
+        regip = re.match('^([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})', row)
+        if regip is not None:
+            line = regip.group(1)
+            try:    
+                IPAddress(line)
+                line_type='ip'
+            except AddrFormatError:
+                continue
+            except ValueError:
+                try:
+                    IPNetwork(line)
+                    line_type='net'
+                except AddrFormatError:
+                    continue
+                except ValueError:
+                    continue 
+            upload2redis(red_pipe, line_type, line, current_threatsource, threattype, threatscore, threat_ttl)
+    red_pipe.execute()
+    iplist_object.close()
+    
+def parse_bambenekconsulting(file_path, red):
+    threattype = 'C2 servers'
+    threatscore = threatscore_dict[threattype]
+    red_pipe = red.pipeline()
+    
+    iplist_object = open(file_path, "r")    
+    current_threatsource='BambenekConsulting.com'
+    for row in iplist_object:
+        line_type=''
+        line = row[:-1]
+        if line == '' or line[0] == "#":
+            continue
+        regip = re.match('^([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}),', row)
+        if regip is not None:
+            line = regip.group(1)
+            try:    
+                IPAddress(line)
+                line_type='ip'
+            except AddrFormatError:
+                continue
+            except ValueError:
+                try:
+                    IPNetwork(line)
+                    line_type='net'
+                except AddrFormatError:
+                    continue
+                except ValueError:
+                    continue 
+            upload2redis(red_pipe, line_type, line, current_threatsource, threattype, threatscore, threat_ttl)
+    red_pipe.execute()
+    iplist_object.close()
+    
+def parse_torproject(file_path, red):
+    threattype='TOR exit nodes'
+    threatscore = threatscore_dict[threattype]
+    red_pipe = red.pipeline()
+    
+    iplist_object = open(file_path, "r")    
+    current_threatsource='TORproject.org'
+    for row in iplist_object:
+        line_type=''
+        line = row[:-1]
+        if line == '':
+            continue
+        regip = re.match('^ExitAddress ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})', row)
+        if regip is not None:
+            line = regip.group(1)
+            try:    
+                IPAddress(line)
+                line_type='ip'
+            except AddrFormatError:
+                continue
+            except ValueError:
+                try:
+                    IPNetwork(line)
+                    line_type='net'
+                except AddrFormatError:
+                    continue
+                except ValueError:
+                    continue 
+            upload2redis(red_pipe, line_type, line, current_threatsource, threattype, threatscore, threat_ttl)
+    red_pipe.execute()
+    iplist_object.close()
+    
 def make_redisconn(conn_db):
     try:
         redis_pool = redis.ConnectionPool(host=redis_server, port=redis_port, db=conn_db)
