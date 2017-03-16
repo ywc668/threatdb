@@ -28,7 +28,7 @@
 [CINS Score]: http://cinsscore.com
 [StopForumSpam]: http://www.stopforumspam.com
 [Sblam!]: http://sblam.com
-[Arbor Attacks]: https://atlas.arbor.net
+[Arbor ATLAS]: https://atlas.arbor.net
 [MYIP.ms]: http://www.myip.ms
 [Botvrij]: http://www.botvrij.eu
 [Darklist.de]: http://www.darklist.de
